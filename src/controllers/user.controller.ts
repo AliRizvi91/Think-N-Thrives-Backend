@@ -68,28 +68,24 @@ export const getUser = async (
 };
 
 // ================= ADD USER =================
-export const addUser = async (
-  req: Request<{}, {}, AddUserBody>,
-  res: Response
-): Promise<Response> => {
+export const addUser = async (req: Request, res: Response) => {
   try {
+    console.log("BODY:", req.body);
+    console.log("FILE:", req.file);
+
     const { username, email, password, role } = req.body;
 
     if (!username || !email || !password) {
-      return res.status(400).json({ success: false, message: "Missing required fields" });
+      return res.status(400).json({ message: "Missing fields" });
     }
 
-    const existingUser = await User_Model.findOne({ email });
-    if (existingUser) {
-      return res.status(409).json({ success: false, message: "User already exists" });
-    }
 
-    const imageLocalPath = (req as any).file?.path;
+    const file = req.file as Express.Multer.File | undefined;
     let imageUrl: string | undefined;
 
-if (imageLocalPath && fs.existsSync(imageLocalPath)) {
-  const uploadedImage = await uploadOnCloudinary(imageLocalPath);
-  if (uploadedImage) imageUrl = uploadedImage;
+if (file) {
+  const uploaded = await uploadOnCloudinary(file.buffer);
+  imageUrl = uploaded ?? undefined;
 }
 
 
@@ -97,17 +93,20 @@ if (imageLocalPath && fs.existsSync(imageLocalPath)) {
       username,
       email,
       password,
-      image: imageUrl,
       role,
+      image: imageUrl,
     });
 
-    const token = generateToken(user._id.toString(), user.role);
-
-    return res.status(201).json({ success: true, user, token });
-  } catch {
-    return res.status(500).json({ success: false, message: "Failed to create user" });
+    return res.status(201).json({
+      user,
+      token: generateToken(user._id.toString(), user.role),
+    });
+  } catch (error) {
+    console.error("SIGNUP ERROR:", error);
+    return res.status(500).json({ message: "Signup failed" });
   }
 };
+
 
 // ================= DELETE USER =================
 export const deleteUser = async (
