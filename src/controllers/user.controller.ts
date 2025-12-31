@@ -5,6 +5,8 @@ import dotenv from "dotenv";
 import bcrypt from "bcryptjs";
 import jwt, { type SignOptions } from "jsonwebtoken";
 import { OAuth2Client } from "google-auth-library";
+import fs from "fs";
+
 
 import { uploadOnCloudinary } from "../services/cloudinary/cloudinary";
 import { sendmailer } from "../services/sendMails/mail";
@@ -85,10 +87,11 @@ export const addUser = async (
     const imageLocalPath = (req as any).file?.path;
     let imageUrl: string | undefined;
 
-    if (imageLocalPath) {
-      const uploadedImage = await uploadOnCloudinary(imageLocalPath);
-      if (uploadedImage) imageUrl = uploadedImage;
-    }
+if (imageLocalPath && fs.existsSync(imageLocalPath)) {
+  const uploadedImage = await uploadOnCloudinary(imageLocalPath);
+  if (uploadedImage) imageUrl = uploadedImage;
+}
+
 
     const user = await User_Model.create({
       username,

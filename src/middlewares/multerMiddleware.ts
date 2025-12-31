@@ -5,7 +5,7 @@ import { Request } from "express";
 // Multer Setup
 const storage: StorageEngine = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadPath = path.join(__dirname, "../public/assets/");
+    const uploadPath = path.join(process.cwd(), "public/assets");
     cb(null, uploadPath); // Correctly set destination path
   },
   filename: (req, file, cb) => {

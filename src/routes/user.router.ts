@@ -30,6 +30,7 @@ User_R.get("/", getAllUsers);
 // ___---- Signup ----___
 User_R.post("/signup", upload.single("image"), addUser);
 
+
 // ___---- Profile ----___
 User_R.get("/profile", protect, (req: AuthRequest, res: Response) => {
   if (!req.user) {
@@ -37,7 +38,6 @@ User_R.get("/profile", protect, (req: AuthRequest, res: Response) => {
       message: "Unauthorized - No user data found",
     });
   }
-
   res.status(200).json({
     user: req.user,
   });
