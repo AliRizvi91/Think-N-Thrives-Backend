@@ -140,6 +140,56 @@ export const sendmailer = async (
                 Verify Email
               </a>
 
+
+
+              <!-- Manual Verification Card -->
+<table
+  width="100%"
+  cellpadding="0"
+  cellspacing="0"
+  role="presentation"
+  style="
+    margin-top:20px;
+    background:#f9fafb;
+    border:1px solid #e5e7eb;
+    border-radius:16px;
+    padding:16px;
+  "
+>
+  <tr>
+    <td align="center">
+
+
+      <p style="
+        font-size:13px;
+        font-weight:600;
+        margin:0 0 8px;
+        color:#111827;
+      ">
+        Copy and paste the link below into your browser to verify your email
+        address.
+      </p>
+
+      <div
+        style="
+          word-break:break-all;
+          background:#ffffff;
+          border:1px dashed #9ca3af;
+          border-radius:12px;
+          padding:10px 12px;
+          font-size:12px;
+          color:#1f2937;
+          text-align:left;
+        "
+      >
+        ${verificationUrl}
+      </div>
+
+    </td>
+  </tr>
+</table>
+
+
               <p style="
                 font-size:14px;
                 line-height:1.6;
