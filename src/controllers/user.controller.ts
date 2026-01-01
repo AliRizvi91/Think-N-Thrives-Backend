@@ -70,8 +70,6 @@ export const getUser = async (
 // ================= ADD USER =================
 export const addUser = async (req: Request, res: Response) => {
   try {
-    console.log("BODY:", req.body);
-    console.log("FILE:", req.file);
 
     const { username, email, password, role } = req.body;
 

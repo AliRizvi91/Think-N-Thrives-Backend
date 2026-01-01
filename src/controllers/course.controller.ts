@@ -32,24 +32,31 @@ export const getCourseById = async (req: Request<{ id: string }>, res: Response)
 };
 
 //___---- Create a New Course ----___
-export const createCourse = async (req: Request, res: Response): Promise<void> => {
+
+export const createCourse = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
     const { title, description, category, duration, author } = req.body;
 
     if (!title || !category || !duration || !author) {
-      res.status(400).json({ success: false, message: "Required fields missing" });
+      res
+        .status(400)
+        .json({ success: false, message: "Required fields missing" });
       return;
     }
+    const file = req.file as Express.Multer.File | undefined;
+    let imageUrl: string | undefined;
 
-    const imageLocalPath = (req as any).file?.path;
-    let imageUrl: string | undefined | null;
+if (file) {
+  const uploaded = await uploadOnCloudinary(file.buffer);
+  imageUrl = uploaded ?? undefined;
+}
 
-    if (imageLocalPath) {
-      const uploadedImage = await uploadOnCloudinary(imageLocalPath);
-      imageUrl = uploadedImage; // directly assign, no .secure_url
-    }
-    
-    const newCourse: ICourse = await Course.create({
+  
+
+    const newCourse = await Course.create({
       title,
       description,
       category,
@@ -58,38 +65,81 @@ export const createCourse = async (req: Request, res: Response): Promise<void> =
       image: imageUrl,
     });
 
-    res.header("Location", `${req.originalUrl}/${newCourse._id}`);
-    res.status(201).json({ success: true, data: newCourse });
+    res
+      .status(201)
+      .location(`${req.originalUrl}/${newCourse._id}`)
+      .json({ success: true, data: newCourse });
   } catch (error) {
     logger.error(error);
-    res.status(500).json({ success: false, message: "Failed to create course" });
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to create course" });
   }
 };
 
+
 //___---- Update Course ----___
-export const updateCourse = async (req: Request<{ id: string }>, res: Response): Promise<void> => {
+export const updateCourse = async (
+  req: Request<{ id: string }>,
+  res: Response
+): Promise<void> => {
   try {
     const { id } = req.params;
-    const updateData: Partial<ICourse> = req.body;
 
-    const imageLocalPath = (req as any).file?.path;
-    if (imageLocalPath) {
-      const uploadedImage = await uploadOnCloudinary(imageLocalPath);
-      if (uploadedImage) updateData.image = uploadedImage;
+    const {
+      title,
+      description,
+      category,
+      duration,
+      author,
+    } = req.body;
+
+    const updateData: Partial<ICourse> = {};
+
+    if (title) updateData.title = title;
+    if (description) updateData.description = description;
+    if (category) updateData.category = category;
+    if (duration) updateData.duration = duration;
+    if (author) updateData.author = author;
+
+    // ✅ handle image upload
+    const file = req.file as Express.Multer.File | undefined;
+
+    if (file) {
+      const uploadedUrl = await uploadOnCloudinary(file.buffer);
+      if (uploadedUrl) {
+        updateData.image = uploadedUrl; // ✅ IMPORTANT FIX
+      }
     }
 
-    const updatedCourse: ICourse | null = await Course.findByIdAndUpdate(id, updateData, { new: true });
+    const updatedCourse = await Course.findByIdAndUpdate(
+      id,
+      { $set: updateData }, // ✅ safer update
+      { new: true, runValidators: true }
+    );
+
     if (!updatedCourse) {
-      res.status(404).json({ success: false, message: "Course not found" });
+      res.status(404).json({
+        success: false,
+        message: "Course not found",
+      });
       return;
     }
 
-    res.status(200).json({ success: true, data: updatedCourse });
+    res.status(200).json({
+      success: true,
+      data: updatedCourse,
+    });
   } catch (error) {
     logger.error(error);
-    res.status(500).json({ success: false, message: "Failed to update course" });
+    res.status(500).json({
+      success: false,
+      message: "Failed to update course",
+    });
   }
 };
+
+
 
 //___---- Delete Course ----___
 export const deleteCourse = async (req: Request<{ id: string }>, res: Response): Promise<void> => {
